@@ -1,0 +1,65 @@
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DeathXGui"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create a Frame for the GUI
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.3, 0, 0.3, 0)
+frame.Position = UDim2.new(0.35, 0, 0.35, 0)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = screenGui
+
+-- Create a TextLabel for the title
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
+titleLabel.Text = "DEATHX"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Parent = frame
+
+-- Create a button to toggle flying
+local flyButton = Instance.new("TextButton")
+flyButton.Size = UDim2.new(1, 0, 0.2, 0)
+flyButton.Position = UDim2.new(0, 0, 0.2, 0)
+flyButton.Text = "Continue to Fly"
+flyButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+flyButton.Parent = frame
+
+-- Variables for flying
+local flying = false
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+local function toggleFly()
+    flying = not flying
+    if flying then
+        flyButton.Text = "Unfly"
+        char.Humanoid.PlatformStand = true
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, 50, 0)
+        bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
+        bodyVelocity.Parent = char.HumanoidRootPart
+
+        -- Control flying with keys
+        game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if flying then
+                if input.KeyCode == Enum.KeyCode.W then
+                    bodyVelocity.Velocity = bodyVelocity.Velocity + char.HumanoidRootPart.CFrame.LookVector * 50
+                elseif input.KeyCode == Enum.KeyCode.S then
+                    bodyVelocity.Velocity = bodyVelocity.Velocity - char.HumanoidRootPart.CFrame.LookVector * 50
+                end
+            end
+        end)
+    else
+        flyButton.Text = "Continue to Fly"
+        char.Humanoid.PlatformStand = false
+        for _, v in pairs(char.HumanoidRootPart:GetChildren()) do
+            if v:IsA("BodyVelocity") then
+                v:Destroy()
+            end
+        end
+    end
+end
+
+flyButton.MouseButton1Click:Connect(toggleFly)
