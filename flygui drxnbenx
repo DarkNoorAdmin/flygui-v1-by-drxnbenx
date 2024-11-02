@@ -1,6 +1,6 @@
 -- Create the ScreenGui
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DeathXFlyGui"
+screenGui.Name = "DeathXFlyGuiTester"
 screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Create a Frame for the GUI
@@ -9,36 +9,88 @@ frame.Size = UDim2.new(0.3, 0, 0.3, 0)
 frame.Position = UDim2.new(0.35, 0, 0.35, 0)
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 frame.Parent = screenGui
+frame.Active = true
+frame.Draggable = true  -- Make the frame draggable
 
 -- Create a TextLabel for the title
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0.2, 0)
-titleLabel.Text = "DEATHX FLY GUI"
+titleLabel.Text = "DEATHX FLY GUI TESTER"
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.BackgroundTransparency = 1
 titleLabel.Parent = frame
 
--- Function to set a random neon color
-local function randomNeonColor()
-    return Color3.new(math.random(), math.random(), math.random())
-end
-
--- Create a button to fly
+-- Create a button to toggle fly
 local flyButton = Instance.new("TextButton")
-flyButton.Size = UDim2.new(1, 0, 0.4, 0)
+flyButton.Size = UDim2.new(1, 0, 0.2, 0)
 flyButton.Position = UDim2.new(0, 0, 0.2, 0)
 flyButton.Text = "Fly"
-flyButton.BackgroundColor3 = randomNeonColor()
+flyButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
 flyButton.Parent = frame
 
--- Create a button to increase speed
-local speedButton = Instance.new("TextButton")
-speedButton.Size = UDim2.new(1, 0, 0.4, 0)
-speedButton.Position = UDim2.new(0, 0, 0.6, 0)
-speedButton.Text = "Speed x10"
-speedButton.BackgroundColor3 = randomNeonColor()
-speedButton.Parent = frame
+-- Create a TextBox for fly speed
+local speedTextBox = Instance.new("TextBox")
+speedTextBox.Size = UDim2.new(1, 0, 0.2, 0)
+speedTextBox.Position = UDim2.new(0, 0, 0.4, 0)
+speedTextBox.PlaceholderText = "Enter Fly Speed"
+speedTextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+speedTextBox.Parent = frame
 
 -- Create a toggle button to hide/show the GUI
 local toggleButton = Instance.new("TextButton")
-toggle
+toggleButton.Size = UDim2.new(1, 0, 0.2, 0)
+toggleButton.Position = UDim2.new(0, 0, 0.6, 0)
+toggleButton.Text = "Toggle GUI"
+toggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+toggleButton.Parent = frame
+
+-- Variables for flying
+local flying = false
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+-- Function to toggle flying
+local function toggleFly()
+    flying = not flying
+    if flying then
+        char.Humanoid.PlatformStand = true
+        local flySpeed = tonumber(speedTextBox.Text) or 50 -- Default speed is 50
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.Velocity = Vector3.new(0, flySpeed, 0)
+        bodyVelocity.MaxForce = Vector3.new(0, math.huge, 0)
+        bodyVelocity.Parent = char.HumanoidRootPart
+
+        -- Control flying with keys
+        game:GetService("UserInputService").InputBegan:Connect(function(input)
+            if flying then
+                if input.KeyCode == Enum.KeyCode.W then
+                    bodyVelocity.Velocity = bodyVelocity.Velocity + char.HumanoidRootPart.CFrame.LookVector * flySpeed
+                elseif input.KeyCode == Enum.KeyCode.S then
+                    bodyVelocity.Velocity = bodyVelocity.Velocity - char.HumanoidRootPart.CFrame.LookVector * flySpeed
+                end
+            end
+        end)
+
+        flyButton.Text = "Unfly"
+    else
+        char.Humanoid.PlatformStand = false
+        for _, v in pairs(char.HumanoidRootPart:GetChildren()) do
+            if v:IsA("BodyVelocity") then
+                v:Destroy()
+            end
+        end
+        flyButton.Text = "Fly"
+    end
+end
+
+-- Function to toggle visibility of the GUI
+local function toggleVisibility()
+    frame.Visible = not frame.Visible
+end
+
+-- Connect button actions
+flyButton.MouseButton1Click:Connect(toggleFly)
+toggleButton.MouseButton1Click:Connect(toggleVisibility)
+
+-- Set initial visibility
+frame.Visible = true
